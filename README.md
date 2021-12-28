@@ -3,7 +3,7 @@ Proyecto template para java, con Selenium y TestNG
 
 # OutPut CreateStructures.java
 
-´´´
+```
 @FindBy Created...
     @FindBy(id="login")
     WebElement loginBtn;
@@ -45,4 +45,4 @@ public class LoginPage extends BasePage{
 }
 
 
-´´´
+```
