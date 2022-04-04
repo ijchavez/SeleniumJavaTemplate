@@ -29,15 +29,14 @@ public class BaseTest extends BasePage{
 	@BeforeTest
 	public void setUpBrowser() throws IOException {
 		System.setProperty(Constants.WEBDRIVER_CHROME, Constants.CHROMEDRIVER_FILE);
- 		usersList = CSV_Helper.getDataFromCSV(Constants.DATALOADER + "users.csv");
+ 		//usersList = CSV_Helper.getDataFromCSV(Constants.DATALOADER + "users.csv");
 	
 	}
 	@AfterMethod
 	public void closeDriver() throws InterruptedException {
 		Thread.sleep(100);
-		//driver.quit();
 		if (driver != null) {
-			//driver.quit();
+			driver.quit();
 			
 		}
 		

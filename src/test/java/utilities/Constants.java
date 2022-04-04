@@ -7,9 +7,9 @@ import constructor.User;
 
 public class Constants{
 	public static final String WEBDRIVER_CHROME = "webdriver.chrome.driver";
-	public static final String CHROMEDRIVER_FILE = "src/test/resources/chromedriver.exe";
+	public static final String CHROMEDRIVER_FILE = "src/test/resources/chromedriver";
 	
-	public static final String URL = "";
+	public static final String URL = "http://automationpractice.com/";
 	public static final String DATALOADER = "dataloader/";
 	public static final String WEBDRIVER_ATTRIBUTE_VALUE = "WebDriver";
 	//Esta variable la utilizo para agregar a los usuarios que van a formar parte de los test

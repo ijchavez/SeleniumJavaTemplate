@@ -26,7 +26,8 @@ public class BaseTestBrowser extends BaseTest{
 	    
 		utils = new Utilities(driver);
 		utils.loadToList(usersList);
-        timeoutManager(10);
+
+		timeoutManager(10);
         
         PageFactory.initElements(driver, this);
         context.setAttribute(Constants.WEBDRIVER_ATTRIBUTE_VALUE, driver);

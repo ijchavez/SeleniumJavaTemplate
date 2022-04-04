@@ -11,5 +11,21 @@ public class LoginPage extends BasePage {
         PageFactory.initElements(driver, this);
 
     }
-    
+    @FindBy(id = "email_create")
+    WebElement emailCreateInput;
+    public WebElement getEmailCreateInput(){
+        return emailCreateInput;
+
+    }
+
+    @FindBy(id = "SubmitCreate")
+    WebElement submitCreateBtn;
+    public AccountCreationPage clickOnSubmitCreateBtn(){
+        submitCreateBtn.click();
+
+        accountCreationPage = new AccountCreationPage(driver);
+        return accountCreationPage;
+
+    }
+
 }
