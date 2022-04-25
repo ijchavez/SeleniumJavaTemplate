@@ -9,7 +9,7 @@ public class Constants{
 	public static final String WEBDRIVER_CHROME = "webdriver.chrome.driver";
 	public static final String CHROMEDRIVER_FILE = "src/test/resources/chromedriver";
 	
-	public static final String URL = "http://automationpractice.com/";
+	public static final String URL = "";
 	public static final String DATALOADER = "dataloader/";
 	public static final String WEBDRIVER_ATTRIBUTE_VALUE = "WebDriver";
 	//Esta variable la utilizo para agregar a los usuarios que van a formar parte de los test
@@ -38,5 +38,8 @@ public class Constants{
 	public static final String HASHMAP_PREFERENCES = "prefs";
 	public static final String INCOGNITO = "incognito";
 
+	public static final String REGEX = ";";
+	public static final String EMPTY = "";
+	public static final String LINE_JUMP = "\n";
 	
 }

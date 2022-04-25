@@ -22,14 +22,16 @@ import utilities.Utilities;
 
 public class BaseTest extends BasePage{
 	ChromeOptions chromeOptions;
+	
 	protected Utilities utils;
 	protected User user;
+	
 	List<String> usersList = new ArrayList<String>();
 	
 	@BeforeTest
 	public void setUpBrowser() throws IOException {
 		System.setProperty(Constants.WEBDRIVER_CHROME, Constants.CHROMEDRIVER_FILE);
- 		//usersList = CSV_Helper.getDataFromCSV(Constants.DATALOADER + "users.csv");
+ 		usersList = CSV_Helper.getDataFromCSV(Constants.DATALOADER + "users.csv");
 	
 	}
 	@AfterMethod

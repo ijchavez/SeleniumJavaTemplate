@@ -2,10 +2,10 @@ package utilities;
 
 public class CreateStructures {
 	public static void main(String[] args) {
-		setFindBy("id", "login", "WebElement", "loginBtn", "clickOnLoginBtn()", "LandingPage", "landingPage");
+		setFindBy("xpath", "//*[@class='titulo-pagina']", "WebElement", "searchElement", "geTituloPagina()");
 		
 		createPage("LoginPage", "BasePage");
-		
+	
 	}
 	public static void setFindBy(String selector, String value, String elementType, String elementName, String functionName) {
 		String findBy = "";
@@ -66,6 +66,7 @@ public class CreateStructures {
 		System.out.println("Page Created...");		
 		System.out.println(page);
 		System.out.println("****************************************");
+		
 	}
 	
 }

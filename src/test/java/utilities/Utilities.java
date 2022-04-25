@@ -1,5 +1,11 @@
 package utilities;
 
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyEvent;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
@@ -35,16 +41,11 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import test.baseTest.*;
-
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.html5.SessionStorage;
-import org.openqa.selenium.html5.WebStorage;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.remote.Augmenter;
-import org.openqa.selenium.support.PageFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -56,20 +57,37 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.jayway.jsonpath.*;
 
+
 import constructor.User;
+
 import extentReport.ExtentTestManager;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import pages.BasePage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Utilities extends BaseTest {
+public class Utilities extends BasePage {
+	
+	public static final String WINDOW_OPEN = "window.open()";
+	public static final String SCROLL_INTO_VIEW = "arguments[0].scrollIntoView();";
+	public static final String SCROLL_TO_DIR_START = "window.scrollBy(0,";
+	public static final String SCROLL_TO_DIR_END = ")";
+	public static final String YES = "yes";
+	public static final String INDENT_NUMBER = "indent-number";
+	public static final String DIVPRECODE_START = "<div><pre><code>"; 
+	public static final String DIVPRECODE_END = "</div></pre></code>";
+	public static final String XML_START = "<div><textarea style=\"border: none; background-color: #243140\" rows=\"30\" cols=\"120\">";
+	public static final String XML_END = "</div></textarea>";
+	public static final String ES_LANGUAGE = "es";
+	public static final String ES_COUNTRY = "ES";
+	
     public Utilities(WebDriver remoteDriver){
         driver = remoteDriver;
-        PageFactory.initElements(driver, this);
+        initElements(driver, this);
 
     }
     public Utilities(){
@@ -86,6 +104,7 @@ public class Utilities extends BaseTest {
         return url;
 
     }
+
     public String makeSplit(String aString, String aSplitter, int pos){
         String[] stringToSplit = aString.split(aSplitter);
 
@@ -104,38 +123,53 @@ public class Utilities extends BaseTest {
         return number;
 
     }
-	public void elementsInAList(List<WebElement> unaListaDeElementos, String unString) {
-		System.out.println(unString);
-		for(WebElement listElementFor : unaListaDeElementos) {
+    public String parseAInt(int anIntToBeParsed) {
+    	String anIntParsed = String.valueOf(anIntToBeParsed);
+    	return anIntParsed;
+    	
+    }
+	public void elementsInAList(List<WebElement> aListOfElements, String aString) {
+		System.out.println(aString);
+		for(WebElement listElementFor : aListOfElements) {
 			System.out.println( ">>> " + listElementFor.getText());
 			
 		}
 		
 	}
-    public void loadToList(List<String> unaListaDeUsuarios) {
+    public void loadToList(List<String> aUserList) {
     	Constants.USERS_LIST.clear();
     	
-    	for(String dato: unaListaDeUsuarios) {
-			String [] arrayDeUsuarios = dato.split(";");
-			String usuario = arrayDeUsuarios[0];
-			String password = arrayDeUsuarios[1];
+    	for(String data: aUserList) {
+			String [] usersArray = makeSplit(data, Constants.REGEX);
+			String user = usersArray[0];
+			String password = usersArray[1];
 
-			User usuarioCompleto = new User(usuario, password);
+			User usuarioCompleto = new User(user, password);
 			Constants.USERS_LIST.add(usuarioCompleto);
 			
 		}
     
     }
-    public String getValueFromKeyInSessionStorage(String aString) throws InterruptedException {
-    	WebStorage webStorage = (WebStorage) new Augmenter().augment(driver);
-		SessionStorage sessionStorage = webStorage.getSessionStorage();
-		String valueFromItem = sessionStorage.getItem(aString);
-		
-		return valueFromItem;
+
+    public JavascriptExecutor createJse() {
+    	JavascriptExecutor jse = (JavascriptExecutor)driver;
+    	return jse;
+    	
+    }
+    public void scrollToADirection(String aDirection) {
+    	JavascriptExecutor jse = createJse();
+    	jse.executeScript(SCROLL_TO_DIR_START + aDirection + SCROLL_TO_DIR_END);
+    	
+    }
+    public void scrollIntoView(WebElement anElement) {
+    	JavascriptExecutor jse = createJse();
+    	jse.executeScript(SCROLL_INTO_VIEW, anElement);
+    
     }
     public void openUrlInNewTab(String anUrl) {
-    	JavascriptExecutor jse = (JavascriptExecutor)driver;
-    	jse.executeScript("window.open()");
+    	JavascriptExecutor jse = createJse();
+    	jse.executeScript(WINDOW_OPEN);
+    	
     	getTabs(1);
     	driver.get(anUrl);  
     	
@@ -145,41 +179,40 @@ public class Utilities extends BaseTest {
     	driver.switchTo().window(tabs.get(aTab));
     	
     }
+    public Alert getSwitchToAlert() {
+    	return driver.switchTo().alert();
+    	
+    }
     public void acceptOnOkPrompt() throws InterruptedException {
-        driver.switchTo().alert().accept();
+    	getSwitchToAlert().accept();
         Thread.sleep(1000);
         
     }
-    public void scrollToADirection(String aDirection) {
-    	JavascriptExecutor jse = (JavascriptExecutor)driver;
-    	jse.executeScript("window.scrollBy(0," + aDirection + ")");
-    	
-    }
     public String AlertGetText() {
-        String AlertText = driver.switchTo().alert().getText();
+        String AlertText = getSwitchToAlert().getText();
         return AlertText;
         
     }
-    public String reemplazoDentroDeString(String unString,String objetoAReemplazar, String objetoReemplazo) {
-    	String cuitSinGuiones = unString.replace(objetoAReemplazar, objetoReemplazo);
-    	return cuitSinGuiones;
+    public String replacementInAString(String aString, String objectToBeReplaced, String objectToReplace) {
+    	String finalStringReplaced = aString.replace(objectToBeReplaced, objectToReplace);
+    	return finalStringReplaced;
     	
     }
     public void printAndReportList(List<String> aListOfStrings) {
-		for(String parrafo : aListOfStrings) {
-    		printAndReport(Constants.NORMALPRINT, parrafo);
+		for(String str : aListOfStrings) {
+    		printAndReport(Constants.NORMALPRINT, str);
 			
 		}
 		
     }
     public void printAndReport(String whatToPrint, String aString, String aNodeTitle) {
     	System.out.println(aString);
-    	if (whatToPrint.equals("J")) {
-        	String htmlDetail = "<div><pre><code>" + aString + "</div></pre></code>";
+    	if (whatToPrint.equals(Constants.JSONPRINT)) {
+        	String htmlDetail = DIVPRECODE_START + aString + DIVPRECODE_END;
     		getReportJsonLog(htmlDetail, aNodeTitle);
 	    	
-    	}else if(whatToPrint.equals("X")) {
-    		String htmlDetail = "<div><textarea style=\"border: none; background-color: #243140\" rows=\"30\" cols=\"120\">" + aString + "</div></textarea>";
+    	}else if(whatToPrint.equals(Constants.XMLPRINT)) {
+    		String htmlDetail = XML_START + aString + XML_END;
     		getReportJsonLog(htmlDetail, aNodeTitle);
     		
     	}
@@ -187,7 +220,7 @@ public class Utilities extends BaseTest {
     }
     public void printAndReport(String whatToPrint, String aString) {
     	System.out.println(aString);
-    	if(whatToPrint.equals("N")) {
+    	if(whatToPrint.equals(Constants.NORMALPRINT)) {
     		getReportLog(aString);
     	
     	}
@@ -273,14 +306,16 @@ public class Utilities extends BaseTest {
 	    return perfectJSON;
 	    
 	}
-	  private static String convertDocumentToString(Document doc) {
+	private static String convertDocumentToString(Document doc) {
 	        TransformerFactory tf = TransformerFactory.newInstance();
 	        Transformer transformer;
 	        try {
 	            transformer = tf.newTransformer();
 	            StringWriter writer = new StringWriter();
+	            
 	            transformer.transform(new DOMSource(doc), new StreamResult(writer));
 	            String output = writer.getBuffer().toString();
+	            
 	            return output;
 	            
 	        } catch (TransformerException e) {
@@ -296,6 +331,7 @@ public class Utilities extends BaseTest {
         try {  
             builder = factory.newDocumentBuilder();  
             Document doc = builder.parse( new InputSource( new StringReader( xmlStr ) ) ); 
+            
             return doc;
             
         } catch (Exception e) {  
@@ -355,8 +391,8 @@ public class Utilities extends BaseTest {
 	    
 	}
 	public String convertDateToReorderForString(String aDate, String formatFromString, String aDateToBeFormatted) throws ParseException {
-		Locale locale=new Locale("es", "ES");
-		SimpleDateFormat formatter2=new SimpleDateFormat(formatFromString, locale);  
+		Locale locale=new Locale(ES_LANGUAGE, ES_COUNTRY);
+		SimpleDateFormat formatter2 = new SimpleDateFormat(formatFromString, locale);  
 			
 		Date date=formatter2.parse(aDate);
 		SimpleDateFormat formatter = new SimpleDateFormat(aDateToBeFormatted);  
@@ -377,7 +413,7 @@ public class Utilities extends BaseTest {
 		return aListOfBoolean;
 		
 	}
-	public String createADateFromNowDate(int aQtyOfDays, String anOperation, String aPattern) {
+	public String createADate(int aQtyOfDays, String anOperation, String aPattern) {
 		LocalDateTime today = LocalDateTime.now();
 		
 		LocalDateTime aDate = null;
@@ -396,9 +432,19 @@ public class Utilities extends BaseTest {
 		return formattedDateTime;	
 		
 	}
+	public String createADate(String aPattern) {
+		LocalDateTime today = LocalDateTime.now();
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(aPattern);
+		String formattedDateTime = today.format(formatter);
+		
+		return formattedDateTime;	
+		
+	}
 	public String createASpecificDate(int aYear, Month aMonth, int aDay, String aPattern) {
 		LocalDate today = LocalDate.of(aYear, aMonth, aDay);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(aPattern);
+		
 		String formattedDateTime = today.format(formatter);
 		
 		return formattedDateTime;	
@@ -409,7 +455,6 @@ public class Utilities extends BaseTest {
 		return number;
 		
 	}
-
 	public String reverseDatesForAssertion(String aDayInStringToReverse, String aPatternToSplit) {
 		String diaArray[] = aDayInStringToReverse.split(aPatternToSplit);
 		String reverseDayFromAfterCompletion = diaArray[2] + "-" + diaArray[1] + "-" + diaArray[0];
@@ -437,13 +482,16 @@ public class Utilities extends BaseTest {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
+            
             Document doc = builder.parse(new InputSource(new StringReader(aRequestBody)));
             
             XPathFactory xPathfactory = XPathFactory.newInstance();
+            
             XPath xpath = xPathfactory.newXPath();
             XPathExpression expr = xpath.compile(anXpathExpression + "text()");
             
             Object result = expr.evaluate(doc, XPathConstants.NODESET);
+           
             NodeList nodes = (NodeList) result;
             for (int i = 0; i < nodes.getLength(); i++) {
             	lS.add(nodes.item(i).getNodeValue().toString());
@@ -466,9 +514,9 @@ public class Utilities extends BaseTest {
     	return lS;
         
 	}	
-    public String removeChars(String str)    {
+    public String removeChars(String str, int start, int end)    {
         StringBuffer sb = new StringBuffer(str);
-        sb.delete(0, 4);
+        sb.delete(start, end);
   
         return sb.toString();
 
@@ -501,14 +549,14 @@ public class Utilities extends BaseTest {
         
     }
     public void transformerFactoryAttributes(TransformerFactory aTransformerFactory, int anIndentNumber) {
-    	aTransformerFactory.setAttribute("indent-number", anIndentNumber);
-    	aTransformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-    	aTransformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+    	aTransformerFactory.setAttribute(INDENT_NUMBER, anIndentNumber);
+    	aTransformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, Constants.EMPTY);
+    	aTransformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, Constants.EMPTY);
     	
     }
     public void transformerSetOutProperties(Transformer aTransformer) {
-    	aTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
-    	aTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+    	aTransformer.setOutputProperty(OutputKeys.INDENT, YES);
+    	aTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, YES);
         
     }
 	public int countOccurrences(String str, String word) {
@@ -525,18 +573,19 @@ public class Utilities extends BaseTest {
 		 
 	}
     public String prettyPrintResponse(Response aResponse){
-        String responseBody = "";
+        String responseBody = Constants.EMPTY;
         try{
             responseBody = aResponse.prettyPrint();
+            
         }catch(NullPointerException npe){
-            responseBody= "The response is null";
+            responseBody = "The response is null";
+        
         }
-
         return responseBody;
 
     }
     public String getStringFromJsonArray(JSONArray aJsonArray, String aKey){
-        String valueToReturn = "";
+        String valueToReturn = Constants.EMPTY;
 
         for (int i = 0; i < aJsonArray.length(); i++) {
             try {
@@ -554,28 +603,47 @@ public class Utilities extends BaseTest {
         return valueToReturn;
 
     }
+    public Actions getActions() {
+       Actions actions = new Actions(driver);
+       return actions;
+       
+    }
     public void moveToAnElement(WebElement anElement) {
-		 Actions builder = new Actions(driver);
-		 builder.moveToElement(anElement).build().perform();
+    	getActions().moveToElement(anElement)
+    					.build()
+    			    .perform();
    	 
-   }
-   public WebElement switchToAnActiveElement() {
+    }
+    public void moveWeightBar(WebElement anElement, int aWidth) {
+	    getActions().moveToElement(anElement)
+	                	.moveByOffset(aWidth, 0)
+	                .click()
+	                	.build()
+	                .perform();
+    	
+    }
+    public void moveWeightBar(WebElement anElement, int aWidth, int aHeigth) {
+	    getActions().moveToElement(anElement)
+	    				.moveByOffset(aWidth, aHeigth)
+				    .click()
+				    	.build()
+				    .perform();
+    	
+    }
+    public WebElement switchToAnActiveElement() {
 	   WebElement anElement = driver.switchTo().activeElement();
 	   return anElement;
    
    }
    public String normalizeForAccent(String aStringToNormalize, Form aNormalizer) {
-	    //en principio uso Normalizer.Form.NFC, por ahora no se necesita porque de alguna manera no volvió a pasar pero dejo
-	    //la variable editable por si necesitamos otro FROM
 		String aStringNormalized = Normalizer.normalize(aStringToNormalize, aNormalizer);
-		
 		return aStringNormalized;
 		
    }
    public void writeIntoAFile(String aFileName, String aLineToWrite) {
 		try	{
-		    FileWriter fw = new FileWriter(aFileName,true); //the true will append the new data
-		    fw.write(aLineToWrite + "\n");//appends the string to the file
+		    FileWriter fw = new FileWriter(aFileName,true);
+		    fw.write(aLineToWrite + Constants.LINE_JUMP);
 		    fw.close();
 		    
 		} catch(IOException ioe){
@@ -589,6 +657,151 @@ public class Utilities extends BaseTest {
     	return seconds;
     	
     }
-
-      
+    public List<Integer> getSequenceOfNumbers(int min, int max) {
+    	List<Integer> numbers = new ArrayList<Integer>();
+    	for (int i = min ; i < max; i++) 
+    		numbers.add(i);
+    	
+    	return numbers;
+    	
+    }
+    
+	public List<String> getRowTable (List<WebElement> rows) {
+    	List<String> rowsTable = new ArrayList<String>();
+    	for (int i = 0; i < rows.size(); i++) {
+    		rowsTable.add(this.getTextFromAWebElement(rows.get(i)));
+    	
+    	}
+    	return rowsTable;
+    	
+    }
+    public List<String> removeEmptyValuesFromList(List<String> aListOfStringsWithEmptyValues) {
+    	List<String> aListWithNoEmptyValues = new ArrayList<String>();
+    	
+		for(int i = 0; i < aListOfStringsWithEmptyValues.size(); i++) {
+			if(!aListOfStringsWithEmptyValues.get(i).equals(Constants.EMPTY)) {
+				aListWithNoEmptyValues.add(aListOfStringsWithEmptyValues.get(i));
+				
+			}
+			
+		}
+		return aListWithNoEmptyValues;
+		
+    }
+    public List<String> removeEmptyValuesFromListArray(String[] aListOfStringsWithEmptyValues) {
+    	List<String> aListWithNoEmptyValues = new ArrayList<String>();
+    	
+		for(int i = 0; i < aListOfStringsWithEmptyValues.length; i++) {
+			if(!aListOfStringsWithEmptyValues[i].equals(Constants.EMPTY)) {
+				aListWithNoEmptyValues.add(aListOfStringsWithEmptyValues[i]);
+				
+			}
+			
+		}
+		return aListWithNoEmptyValues;
+		
+    }
+    public List<String[]> splitList(List<String> list, String aSplitter){
+    	List<String[]> matrixListTextSplitted = new ArrayList<String[]>();
+		
+		for (String str : list) {
+			String[] mLs = str.split(aSplitter);
+			matrixListTextSplitted.add(mLs);
+	
+		}
+		
+		return matrixListTextSplitted;
+    	
+    }
+    public List<String[]> splitList(List<String> list){
+    	List<String[]> matrixListTextSplitted = new ArrayList<String[]>();
+		
+		for (String str : list) {
+			String[] mLs = str.split(Constants.LINE_JUMP);
+			matrixListTextSplitted.add(mLs);
+	
+		}
+		
+		return matrixListTextSplitted;
+    	
+    }
+    public void IndexOutOfBoundsExceptionCatch(List<String[]> list, int pos, int posArray) {
+    	List<String[]> listArray = new ArrayList<String[]>();
+    	try {
+    		listArray.addAll(list);
+    		//System.out.println("--> " + listArray);
+    		
+    	}
+    	catch (IndexOutOfBoundsException e){
+    		//System.out.println(">>> " + e.getLocalizedMessage());
+    		//ExtentTestManager.reporterLog(AssertionErrorMessages.MATRIX_NOT_FOUND + e.getLocalizedMessage(), Status.FAIL);
+    		
+    	}
+    	
+    }
+    public void IndexOutOfBoundsExceptionCatchList(List<String> list, int pos) {
+    	List<String> listArray = new ArrayList<String>();
+    	try {
+    		list.add(listArray.get(pos));
+    		
+    	}
+    	catch (IndexOutOfBoundsException e){
+    		//System.out.println(e.getLocalizedMessage());
+    		//ExtentTestManager.reporterLog(AssertionErrorMessages.MATRIX_NOT_FOUND + e.getLocalizedMessage(), Status.FAIL);
+    		
+    	}
+    	
+    }
+    public List<String> matchStringOrCharacter(List<String> List, String match) {
+    	List<String> listReturn= new ArrayList<String>();
+    	for (int i =0 ; i < List.size(); i++) {
+    		if (List.get(i).contains(match)) {
+    			listReturn.add(List.get(i));
+    			
+    		}
+    		
+    	} 
+    	return listReturn;
+    	
+    }
+    public void fileUploadWithRobot (String path) throws AWTException {
+    	Robot robot = new Robot();
+    	
+    	robot.setAutoDelay(2000);
+ 
+        StringSelection selection = new StringSelection(path);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection,null);
+ 
+        robot.setAutoDelay(1000);
+ 
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        robot.keyPress(KeyEvent.VK_V);
+ 
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+        robot.keyRelease(KeyEvent.VK_V);
+ 
+        robot.setAutoDelay(1000);
+ 
+        robot.keyPress(KeyEvent.VK_ENTER);
+        robot.keyRelease(KeyEvent.VK_ENTER);
+        
+    }
+    public List<String> getFilesFromDirectory(String path) throws AWTException {
+		File directory =  new File (path);
+		List<String> nameFiles = new ArrayList<String>();
+		if(directory !=null) {
+			File[] files = directory.listFiles();
+			for(int i=0; i< files.length; i++) {
+				File filesText = files[i];
+				nameFiles.add(filesText.getName().toString());
+			}
+		}
+		return nameFiles;
+	}
+    public String cutAString(String aStringToBeCutted, int from, int to) {
+    	String aStringCutted = aStringToBeCutted.substring(from, to);
+    	return aStringCutted;
+    	
+    }
+    
 }
